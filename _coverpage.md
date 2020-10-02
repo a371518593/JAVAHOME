@@ -1,11 +1,11 @@
 <p align="center">
-<img src="./pictures/logo.png" width="200" height="200"/>
+<img src="./pictures/logo.jpg" width="200" height="200"/>
 </p>
-<h1 align="center">JavaGuide面试突击版</h1>
+<h1 align="center">JAVAHOME</h1>
 
-[常用资源](https://shimo.im/docs/MuiACIg1HlYfVxrj/)
-[GitHub](https://github.com/Snailclimb/JavaGuide-Interview)
-[开始阅读](#javaguide-interview)
+
+[GitHub](https://a371518593.github.io/JAVAHOME/#/)
+[开始阅读](#https://snailclimb.gitee.io/javaguide-interview/#/)
 
 
 

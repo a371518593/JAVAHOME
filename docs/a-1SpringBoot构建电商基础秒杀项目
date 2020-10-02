@@ -1,0 +1,148 @@
+框架回顾
+
+Spring Boot 对应的配置化操作，只需要在resources目录下创建默认配置文件——**application.yml**或**application.properties**，在其中进行配置
+
+***
+
+**集成Mybatis**：进入pom文件，确定使用的数据库，使用mysql，则引入mysql-connector-java包；确定使用什么连接池来管理mysql的链接，这里使用阿里巴巴的**druid**连接池。然后将spring boot对mybatis的支持引入，这里使用mybatis-spring-boot-starter包；在配置文件类导入mybatis需要的一些配置，用来启动一个带mybatis数据库访问的一个spring boot工程；然后使用mybatis的自动生成工具，用来生成对应数据库文件的映射；
+
+***
+
+**dao层与dataobject层**由mybatis自动生成工具生成，dataobject层（负责数据存储到service层的传输）下的类对应数据库对象模型，其中的字段与数据库一一映射，dao层下的类定义对数据库进行交互的方法，在resources的mapping目录下有自动生成dao层对应的配置文件，一起实现对数据库的操作。
+
+***
+
+**在service层**下的**model目录**中创建对象模型（不可以把数据库的映射简单透传返回给想要service的服务，这个model对应**Spring MVC**中业务逻辑交互的模型），然后在数据库中创建对应的表，在service层下创建对应对象的service接口，接口中定义需要的方法（方法的返回类型大部分为model对象），在service层下**impl**目录下去实现。添加方法：在mapping目录下对应配置文件中添加相应的SQL语句，在dao目录下的对应接口中建立映射(添加方法)。
+
+***
+
+**在serviceImpl**中定义数据库对象dataobject与模型对象model相互转换的方法，在controller中定义模型对象model与视图对象viewobject相互转换的方法，这里使用到了**org.springframework.beans.BeanUtils**方法；serviceImpl类与controller类中分别需要添加@**Service注解和@Controller注解**
+
+***
+
+**response层**定义了统一返回类型，有一个通用对象，最终返回前端的对象为该通用对象
+
+***
+
+**error层**有一个common error接口，一个**Enum枚举类**实现该接口，该枚举类通过构造方法构造一个实现common error接口的enum类型的子类，一个继承Exception且实现common error方法的类，其内强关联一个对应的**common error（即enum类）**，且实现其对应构造函数以方便使用。该方式对应设计模式——**包装器业务异常类**实现。
+
+***
+
+在**controller层**下中的**viewobject**目录下创建可供UI使用的对象，其中的字段为可以给用户查看的字段。在controller层下创建对应对象的controller类，在其中调用其service接口中的方法来实现相应逻辑；
+
+***
+
+```java has
+@ExceptionHandler(Exception.class)//需要指明收到什么样的exception之后才会进入它的处理环节，此处定义为根类
+@ResponseStatus(HttpStatus.OK)//捕获到controller抛出的exception，并返回HttpStatus.OK,即status=200
+@ResponseBody //handler exception使用这种方式（Object会寻找本地页面文件）仅仅只能返回页面路径，无法处理viewobject类对应的@ResponseBody形式，加上@ResponseBody注解即可解决
+public Object handlerException(HttpServletRequest request, Exception ex){
+    //获取异常并处理
+}
+
+1
+2
+3
+4
+5
+6
+```
+
+其他所有controller类都要继承基类**BaseController**
+
+在**UserController**中，用户登录接口中将登陆凭证加入到用户登录成功的**session**中;
+
+```java has
+@Autowired
+private HttpServletRequest httpServletRequest;
+//通过bean的方式注入进来，代表这个HttpServletRequest是单例模式
+//单例模式怎么可以支持一个request支持多个用户的并发访问？
+//bean包装的HttpServletRequest，本质是一个proxy，它内部拥有ThreadLocal方式的map，去让用户在每个线程当中去处理它自己对应的request，
+//并且有ThreadLocal清除机制，可以放心使用，且这个HttpServletRequest对应当前用户的http请求
+
+
+//将登陆凭证加入到用户登录成功的session中，分布式中用token
+this.httpServletRequest.getSession().setAttribute("IS_LOGIN",true);
+this.httpServletRequest.getSession().setAttribute("LOGIN_USER",userVO);
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+```
+
+***
+
+**登录密码加密**：
+
+
+
+因为jdk自带的MD5实现的方式只支持16位MD5，更改加密方法；
+
+```java has
+//将密码加密
+public String EncodeByMd5(String str) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    //确定计算方法
+    MessageDigest md5 = MessageDigest.getInstance("MD5");
+    BASE64Encoder base64Encoder = new BASE64Encoder();
+    //加密字符串
+    String newstr = base64Encoder.encode(md5.digest(str.getBytes("utf-8")));
+    return newstr;
+}
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+```
+
+***
+
+**validator层**下为格式化校验规则，在pom文件中引入**Apache Commons Lang**包，使用了其**StringUtils工具类**；还引入了**hibernate-validator包**来进行校验。其下建立一个校验结果对象，对象中还创建一个获取错误信息的方法以便使用；并创建一个实现InitializingBean类的一个校验实现类，将hibernate validator 通过工厂校验的方式使其实例化，然后实现校验方法并返回校验结果对象。另外对字段有什么限制可在model层下对象模型的字段上添加注解如@NotBlank、@NotNull、@Max、@Min等。
+
+***
+
+**跨域解决**：在controller类上加上如下注解
+
+```java has
+@CrossOrigin(allowCredentials = "true",allowedHeaders = "*")  //实现跨域
+
+1
+```
+
+**DEFAULT_ALLOW_CREDENTIALS = true**： 需配合前端设置，**xhrFields**授信后
+
+使得跨域session共享 前端ajax请求添加设置：**xhrFields:{withCredentials:true}**
+
+**DEFAULT_ALLOWED_HEADERS** = *：**允许跨域传输所有的header参数，将用于使用token放入header域做session共享的跨域请求**
+
+# 项目要点
+
+1. 在mybatis-generator.xml配置文件中在对应生成表类名配置中加入；
+
+1. 前端 ajax 调用接口获取验证码 html/getotp.html，出现跨域请求问题 解决方法：@CrossOrigin(origins = {"*"}, allowCredentials = “true”) allowedHeaders 允许前端将 token 放入 header 做 session 共享的跨域请求。 allowCredentials 授信后，需前端也设置 xhfFields 授信才能实现跨域 session 共享。 xhrFields: {withCredentials: true},
+
+1. 统一前端返回格式**CommonReturnType {status: xx ,object:xx} dataobject -> 与数据库对应的映射对象 model -> 用于业务逻辑service的领域模型对象 viewobject -**> 用于前端交互的模型对象
+
+1. 使用 **hibernate-validator** 通过注解来完成模型参数校验；
+
+1. **insertSelective** 中设置 **keyProperty=“id” useGeneratedKeys=“true”** 使得插入完后的 DO 生成自增 id 。 insertSelective与insert区别： insertSelective对应的sql语句加入了NULL校验，即只会插入数据不为null的字段值（null的字段依赖于数据库字段默认值）insert则会插入所有字段，会插入null。
+
+1. 数据库设计规范，设计时字段要设置为**not null**，并设置默认值，避免唯一索引在null情况下失效等类似场景
+
+1. 解决如果事务**createorder**下单如果回滚，该下单方法中获得流水号id回滚，使等到的id号可能再一次被使用 在**generatorOrderNo**方法前加注解： **@Transactional(propagation = Propagation.REQUIRES_NEW)**
+
+1. 使用**聚合模型**在itemModel加入**PromoModel promoModel**，若不为空表示其有未结束的秒杀活动；在orderModel中加入promoId，若不为空，则以秒杀方式下单；
+

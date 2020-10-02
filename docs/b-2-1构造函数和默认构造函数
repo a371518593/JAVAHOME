@@ -1,0 +1,182 @@
+### 构造函数
+
+构造函数,主要是用来在创建对象时初始化对象，一般会跟new运算符一起使用，给对象成员变量赋初值。
+
+```java
+class Cat{  
+     String sound;  
+     public Cat(){  
+        sound = "meow";  
+     }  
+}  
+public class Test{  
+     public static void main(String[] args){  
+        System.out.println(new Cat().sound);  
+     }  
+}
+```
+
+运行结果为：
+
+```text
+meow
+```
+
+构造函数的特点
+
+1. 构造函数的**名称必须与类名相同**，而且还对大小写敏感。
+
+1. 构造函数**没有返回值，也不能用void修饰**。如果跟构造函数加上返回值，那这个构造函数就会变成普通方法。
+
+1. 一个类可以**有多个构造方法**，如果在定义类的时候没有定义构造方法，编译器会自动插入一个无参且方法体为空的**默认构造函数**。
+
+1. 构造方法**可以重载**。
+
+等等，为什么无参构造函数和默认构造函数要分开说？它们有什么不同吗？**是的**。
+
+### 默认构造函数
+
+我们创建一个显式声明无参构造函数的类，以及一个没有显式声明构造函数的类：
+
+```java
+class Cat{  
+ public Cat(){}  
+}  
+class CatAuto{}
+```
+
+然后我们编译一下，得到它们的字节码：
+
+
+
+![](https://tcs-ga.teambition.net/storage/111xaa82d4514dafb0cf9663eda4fe9b33e0?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjU5Mzc3MGZmODM5NjMyMDAyZTAzNThmMSIsIl9hcHBJZCI6IjU5Mzc3MGZmODM5NjMyMDAyZTAzNThmMSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTYwMjIzOTgyNywiaWF0IjoxNjAxNjM1MDI3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExMXhhYTgyZDQ1MTRkYWZiMGNmOTY2M2VkYTRmZTliMzNlMCJ9.CTcOtE7X64YBUtsJYsLQ52968gkrizphW_yS0DTxOZo&download=image.png "")
+
+invokespecial指令是用于调用实例化<init>方法、私有方法和父类方法。我们可以看到，即使没有显式声明构造函数，在创建CatAuto对象的时候invokespecial指令依然会调用<init>方法。那么是谁创建的无参构造方法呢？是**编译器**。
+
+从[前文](https://segmentfault.com/a/1190000021926122)我们可以得知，在类加载过程中的验证阶段会调用检查类的父类数据，也就是会先初始化父类。但毕竟**验证**父类数据跟**创建**父类数据，从动作的目的上看二者并不相同，所以类会在java文件编译成class文件的过程中，编译器就将自动向无构造函数的类添加无参构造函数，即**默认构造函数**。
+
+**为什么可以编译器要向没有定义构造函数的类，添加默认构造函数？**
+
+构造函数的目的就是为了**初始化**，既然没有显式地声明初始化的内容，则说明没有可以初始化的内容。为了在JVM的类加载过程中顺利地加载父类数据，所以就有默认构造函数这个设定。那么二者的不同之处在哪儿？
+
+**二者在创建主体上的不同**。无参构造函数是由开发者创建的，而默认构造函数是由编译器生成的。
+
+**二者在创建方式上的不同**。开发者在类中显式声明无参构造函数时，编译器不会生成默认构造函数；而默认构造函数只能在类中没有显式声明构造函数的情况下，由编译器生成。
+
+**二者在创建目的上也不同**。开发者在类中声明无参构造函数，是为了**对类进行初始化操作**；而编译器生成默认构造函数，是为了在**JVM进行类加载时，能够顺利验证父类的数据信息**。
+
+噢...那我想分情况来初始化对象，可以怎么做？**实现构造函数的重载即可**。
+
+### 构造函数的重载
+
+在[《Java的多态（深入版）》](https://segmentfault.com/a/1190000021936858)中介绍到了实现多态的途径之一，重载。所以重载本质上也是
+
+举个栗子，我们在领养猫的时候，一般这只猫是没有名字的，它只有一个名称——猫。当我们领养了之后，就会给猫起名字了：
+
+```text
+class Cat{  
+     protected String name;  
+     public Cat(){  
+        name = "Cat";  
+     }  
+     public Cat(String name){  
+        this.name = name;  
+     }  
+}
+```
+
+在这里，Cat类有两个构造函数，**无参构造函数**的功能就是给这只猫附上一个统称——猫，而**有参构造函数**的功能是定义主人给猫起的名字，但因为主人想法比较多，过几天就换个名称，所以猫的名字不能是常量。
+
+当有多个构造函数存在时，**需要注意**，在创建子类对象、调用构造函数时，**如果在构造函数中没有特意声明，调用哪个父类的构造函数，则默认调用父类的无参构造函数**（通常编译器会自动在**子类构造函数的第一行加上super()方法**）。
+
+如果父类没有无参构造函数，或想调用父类的有参构造方法，则需要在**子类构造函数的第一行用super()方法**，声明调用父类的哪个构造函数。举个栗子：
+
+```text
+class Cat{  
+     protected String name;  
+     public Cat(){  
+        name = "Cat";  
+     }  
+     public Cat(String name){  
+        this.name = name;  
+     }  
+}  
+class MyCat extends Cat{  
+     public MyCat(String name){  
+        super(name);  
+     }  
+}  
+public class Test{  
+     public static void main(String[] args){  
+         MyCat son = new MyCat("Lucy");  
+         System.out.println(son.name);  
+     }  
+}  
+```
+
+运行结果为：
+
+```text
+Lucy
+```
+
+**总结**一下，构造函数的作用是用于创建对象的初始化，所以**构造函数的“方法名”与类名相同，且无须返回值**，在定义的时候与普通函数稍有不同；且从创建主体、方式、目的三方面可看出，**无参构造函数和默认构造函数不是同一个概念**；除了Object类，所有类在加载过程中都需要调用父类的构造函数，所以**在子类的构造函数中，****需要使用super()方法隐式或显式地调用父类的构造函数**。
+
+
+
+
+
+### 
+
+总结一下，Java对象创建时有两种类型的构造函数：类构造函数<clinit>方法、实例构造函数<init>方法，而整个Java对象创建过程是这样：
+
+
+
+![](https://tcs-ga.teambition.net/storage/111x9fb1372fc4c1966c63d531c57d8a24d8?Signature=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBcHBJRCI6IjU5Mzc3MGZmODM5NjMyMDAyZTAzNThmMSIsIl9hcHBJZCI6IjU5Mzc3MGZmODM5NjMyMDAyZTAzNThmMSIsIl9vcmdhbml6YXRpb25JZCI6IiIsImV4cCI6MTYwMjIzOTgyNywiaWF0IjoxNjAxNjM1MDI3LCJyZXNvdXJjZSI6Ii9zdG9yYWdlLzExMXg5ZmIxMzcyZmM0YzE5NjZjNjNkNTMxYzU3ZDhhMjRkOCJ9.qwe22WMi13MB0Erw07JuhXdTycev1l4eDlMp36GgRxE&download=image.png "")
+
+
+
+## 类的加载的过程
+
+类加载过程主要包含加载、验证、准备、解析、初始化、使用、卸载七个方面，下面一一阐述。
+
+　　**一、加载**
+
+　　在加载阶段，虚拟机主要完成三件事：
+
+　　1.通过一个类的全限定名来获取定义此类的二进制字节流。
+
+　　2.将这个字节流所代表的静态存储结构转化为方法区域的运行时数据结构。
+
+　　3.在Java堆中生成一个代表这个类的java.lang.Class对象，作为方法区域数据的访问入口
+
+　　**二、验证**
+
+　　验证阶段作用是**保证Class文件的字节流包含的信息符合JVM规范，不会给JVM造成危害。**如果验证失败，就会抛出一个java.lang.VerifyError异常或其子类异常。验证过程分为四个阶段
+
+　　1.**文件格式**验证：验证字节流文件是否符合Class文件格式的规范，并且能被当前虚拟机正确的处理。
+
+　　2.**元数据**验证：是对字节码描述的信息进行语义分析，以保证其描述的信息符合Java语言的规范。
+
+　　3.**字节码**验证：主要是进行数据流和控制流的分析，保证被校验类的方法在运行时不会危害虚拟机。
+
+　　4.**符号引用**验证：符号引用验证发生在虚拟机将符号引用转化为直接引用的时候，这个转化动作将在解析阶段中发生。
+
+　　**三、准备**
+
+　　准备阶段**为变量分配内存并设置类变量的初始化**。在这个阶段分配的仅为类的变量(static修饰的变量)，而不包括类的实例变量。对已非final的变量，JVM会将其设置成“零值”，而不是其赋值语句的值：
+
+　　pirvate static int size = 12;
+
+　　那么在这个阶段，size的值为0，而不是12。 final修饰的类变量将会赋值成真实的值。
+
+　　**四、解析**
+
+　　解析过程是**将常量池内的符号引用替换成直接引用**。主要包括四种**类型引用**的解析。**类或接口的**解析、**字段**解析、**方法**解析、**接口方法**解析。
+
+　　**五、初始化**
+
+　　在准备阶段，类变量已经经过一次初始化了，在这个阶段，则是根据程序员通过程序制定的计划去初始化类的变量和其他资源。这些资源有static{}块，构造函数，父类的初始化等。
+
+
+

@@ -1,0 +1,101 @@
+***
+
+## 三种基本的程序结构[#](https://www.cnblogs.com/54chensongxia/p/11509067.html#1685531047)
+
+- 顺序结构
+
+- 选择结构
+
+- 循环结构
+
+使用这三种结构能编写出任意功能的程序。
+
+### Java中的注释[#](https://www.cnblogs.com/54chensongxia/p/11509067.html#2856409015)
+
+- 单行注释
+
+- 多行注释
+
+- 文档注释：/** / 使用javadoc可以生成api文档
+
+### Java中的关键字[#](https://www.cnblogs.com/54chensongxia/p/11509067.html#1689308885)
+
+Java中一共有48个关键字，2个保留字和三个直接量
+
+- 访问控制：private、protected、public
+
+- 类,方法和变量修饰符：abstract、class、extends、final、implements、interface、native、new、static、strictfp、synchronized、transient、volatile
+
+- 程序控制:break、continue、return、do、while、if、else、for、instanceof、switch、case、default
+
+- 错误处理：try、cathc、throw、throws、finally
+
+- 包相关：import、package
+
+- 基本类型：boolean、byte、char、double、float、int、long、short、null、true、false
+
+- 变量引用：super、this、void
+
+- 保留字：goto、const
+
+- 直接量：true、false、null
+
+重要关键字说明：
+
+- native： 用来声明一个方法是由与机器相关的语言(如C/C++/FORTRAN语言)实现的；
+
+- strictfp：用来声明FP-strict(双精度或单精度浮点数)表达式；
+
+- transient：声明不用序列化的属性；
+
+- volatile：表明两个或多个变量必须同步地发生变化。
+
+### 数据类型[#](https://www.cnblogs.com/54chensongxia/p/11509067.html#3666813567)
+
+Java中的数据类型分为基本数据类型和引用数据类型。
+
+![数据类型](http://cdn.processon.com/5e660401e4b08831b9a03509?e=1583747601&token=trhI0BY8QfVrIGn9nENop6JAc6l5nZuxhjQ62UfM:br5RvOBnAwQiymwHngJGKPARFTM= "")
+
+8种基本数字类型从大类上分的话分别是布尔型，字符型，整形和浮点型，对应bool，byte，char，short，int，long，float和double类型。
+
+- byte：一个字节，8个bit位，-2^7 ～ 2^7-1
+
+- char : 2个字节，16个bit位，0 ～ 2^16-1 ;
+
+- short：2个字节，16个bit位，-2^15 ～ 2^15-1
+
+- int：4个字节，32个bit位，-2^31 ～ 2^31-1
+
+- long：8个字节，64个bit位，-2^63 ～ 2^63-1
+
+- float：4个字节，32个bit位
+
+- double：8个字节，64个bit位。
+
+### 包装类类型[#](https://www.cnblogs.com/54chensongxia/p/11509067.html#3516837846)
+
+包装类型是相对于基本数据类型来讲的。Java中有8种基本数据类型，每个基本数据类型都有相对的包装类型。比如int的包装类型是Integer。包装类型都是是引用类型，而且都是不可变类。
+
+关于包装类型，有两个概念需要我们了解：
+
+- **自动装箱**：将基本数据类型赋值给包装类型的过程，实现原理是编译器层面new了一个包装类再赋值给相应的变量（如果是是将包装类缓存过的数值赋值给包装类的化，不会new新的包装了，而是直接使用缓存的对象）；
+
+- **自动拆箱**：包装类型直接赋值给基本数据类型，实现原理类似，也是编译器层面调用了包装类的getValue方法再赋值给对应的基本数值类型。
+
+比较有趣的是，包装类型在加载的过程中都会缓存某些值的类。比如Integer会缓存-128到127的类。
+
+```java hljs
+Copy
+//不会使用缓存的数据
+Integer num1 = new Integer(1); 
+//会使用缓存的数据,实际上是调用了Integer.valueOf方法
+Integer num2 = 1；
+
+```
+
+通过设置-XX:AutoBoxCacheMax=?这个参数，可以调整Integer缓存的最大值。当然其他包装类型也有类似的行为，Byte、Short和Long都缓存了-128到127的类，Character缓存了0到127的类，但是这些类不能像Integer那样修改缓存的最大值。
+
+
+
+## 
+
